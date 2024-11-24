@@ -1,0 +1,113 @@
+#### Postgresql 11 ==> 16 ####
+
+PostgreSQL 16 a été publié le 14 septembre 2023. Son EOL est prévu pour 1er mars 2031
+PostgreSQL 16 offre des améliorations importantes en termes de performance grâce à des optimisations dans le planificateur de requêtes et le moteur d'exécution. 
+Il inclut une gestion plus efficace de la mémoire, en particulier pour les opérations complexes. De plus, il introduit des améliorations au niveau des indices, 
+du traitement des partitions, et des optimisations du système de gestion des fichiers​
+PostgreSQL 16 introduit de nouveaux mécanismes de sécurité, y compris des améliorations dans la gestion des rôles et des privilèges, ainsi que des mises à jour 
+pour la prise en charge des dernières normes de chiffrement et de communication sécurisée. Il a également résolu plusieurs vulnérabilités identifiées dans les 
+versions antérieures​
+La version 16 a apporté des améliorations significatives en matière de gestion des clusters, en particulier pour les configurations Master-Slave et RO-RW. 
+Les optimisations au niveau de la réplication logique et physique permettent une gestion plus fluide et rapide des bases de données en mode cluster.
+
+#### Apache httpd ####
+
+Apache HTTP Server (httpd) est la 2.4.62, qui a été publiée le 17 juillet 2024​
+Apache HTTP Server 2.4.62 apporte diverses améliorations en termes de sécurité, de performances, et de fonctionnalités par rapport aux versions précédentes
+de la branche 2.4.x. Si vous utilisez une version antérieure, il est recommandé de mettre à jour vers cette version pour bénéficier des derniers correctifs 
+de sécurité et améliorations.
+
+#### Alternatives java 11 ==> java 21 ####
+
+Approche prudente et professionnelle : Installer Java 17 en parallèle de Java 11 permet de minimiser les risques de panne. Vous avez la possibilité de 
+revenir rapidement à Java 11 en cas de problème, ce qui est crucial en production.
+
+Utilisation d'alternatives : L'outil est conçu pour gérer plusieurs versions d'une même application (Java, Python, etc.) sur un même système, 
+ce qui en fait un choix légitime et fiable pour ce type de cas.
+
+2. Avantages d'utiliser alternatives:
+
+Flexibilité :
+Vous pouvez basculer entre Java 11 et Java 21 facilement via la commande alternatives.
+Vous ne modifiez pas directement les liens symboliques critiques du système, ce qui réduit les risques de configuration incorrecte.
+
+Rollback simplifié :
+En cas d'incident avec Java 17, il suffit de reconfigurer alternatives pour pointer vers Java 11, ce qui est rapide et sans impact important.
+
+Cohabitation propre :
+Java 11 et Java 17 peuvent coexister sans conflits, car chaque version est installée dans des répertoires distincts (/usr/lib/jvm/java-11-openjdk 
+et /usr/lib/jvm/java-17-openjdk par exemple).
+
+#### Springboot 2 ==> Springboot 3 ####
+
+Java 21 intègre des améliorations significatives, notamment Project Loom pour les threads virtuels, ce qui améliore la gestion de la concurrence et 
+réduit les overheads des threads traditionnels. Cela permet une meilleure performance pour les applications fortement concurrentes comme les 
+microservices Spring Boot utilisant des requêtes Web.
+Spring Boot 3 est compatible avec ces nouvelles fonctionnalités, ce qui améliore globalement les temps de réponse et l'efficacité des applications, 
+particulièrement dans les cas où il y a beaucoup d'attente réseau ou d'I/O.
+
+Spring Boot 3 peut consommer plus de mémoire si utilisé avec ses nouvelles fonctionnalités activées par défaut. Cependant, dans des environnements 
+bien configurés, Java 21 avec GraalVM ou ZGC peut compenser cette hausse.
+
+Spring Boot 3 est plus efficace en gestion CPU, notamment pour des applications à forte charge ou très concurrentes. Cependant, la configuration 
+initiale et la compilation native (si utilisée) nécessitent plus de ressources.
+
+#### Maven 3.6 ==> 3.9 ####
+
+Améliorations de la gestion parallèle : meilleure utilisation des threads pour des builds multi-modules grâce à des optimisations internes.
+Réduction des temps de résolution des dépendances grâce à des améliorations dans le système de cache local et la gestion des artefacts.
+Réduction des vulnérabilités liées aux artefacts téléchargés via des serveurs non sécurisés.
+Améliorations pour les plugins Maven, y compris une meilleure compatibilité avec les versions récentes de Java (Java 17+).
+Meilleur support pour les repositories distants et artefacts stockés sur des systèmes modernes (comme Artifactory ou Nexus).
+Fonctionne mieux avec les dernières versions de plugins et frameworks modernes comme Spring Boot 3.0 
+
+Résumé Performance Maven 3.9: Cette version offre des améliorations significatives en termes de performance, de compatibilité et de sécurité
+
+#### Nodejs 12/14 ==> 20 LTS ####
+
+Node.js 12 (EOL 30 avril 2022​)
+Node.js 14 (EOL 30 avril 2023​)
+Node.js 20 (le début du support LTS en octobre 2023, et le support prévu jusqu’en 2026)
+
+Node.js 20 :
+
+Maintenu activement, avec des fonctionnalités avancées et des paramètres de sécurité renforcés, ce qui en fait l’option la plus adaptée 
+pour des environnements de production sécurisés.​
+
+Les dernières versions d'Angular (comme Angular 16+) sont mieux optimisées pour Node.js 20, grâce à des fonctionnalités modernes comme les modules ES 
+et des optimisations des temps d’exécution.
+
+#### PM2 4.x ==> 5.3.0 ####
+
+PM2 5.3.0 est particulièrement adapté aux systèmes critiques nécessitant une haute disponibilité et des environnements multi-applications complexes.
+La version 5.3.0 a renforcé la résilience face aux pannes grâce à des mécanismes améliorés de redémarrage et de récupération, particulièrement utiles 
+pour les applications critiques.
+La version 5.3.0 inclut des correctifs liés à la sécurité et offre une compatibilité améliorée avec les pratiques modernes de déploiement, telles que 
+les environnements conteneurisés.
+
+#### KAFKA 2.8.1 ==> 3.5.1 ####
+
+Kafka 3.5.1 apporte des améliorations significatives en termes de latence et de débit grâce à des optimisations dans le gestionnaire de clusters et 
+dans les protocoles de réplication.
+Kafka 3.5.1 intègre des corrections de bugs importantes par rapport à Kafka 2.8.1, notamment sur des problèmes liés aux transitions de leaders et à 
+la gestion des partitions, ce qui réduit les risques de panne en production​
+Kafka 3.5.1 propose des API plus riches et mieux adaptées aux nouvelles applications, rendant la migration plus simple et moins risquée pour les 
+développeurs qui utilisent des outils modernes comme Kafka Streams ou Connect.
+
+
+#### Swagger OpenAPI New ####
+
+
+Mise à jour des dépendances :
+
+
+Spring Boot 2 :
+
+Utilise principalement Springfox comme bibliothèque pour la documentation des API basées sur OpenAPI/Swagger.
+Springdoc-OpenAPI a également été largement adopté comme alternative plus moderne.
+
+
+Spring Boot 3 :
+
+Springfox est largement abandonné, car il n'est pas compatible avec Spring Boot 3.
+L'approche recommandée est désormais d'utiliser Springdoc-OpenAPI, qui prend en charge les normes OpenAPI 3.x et s'intègre parfaitement avec Spring Boot 3.
