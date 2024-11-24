@@ -1,0 +1,34 @@
+---
+- name: Save PM2 ecosystem configuration
+  hosts: all
+  become: yes
+  tasks:
+    - name: Ensure the rollback directory exists
+      file:
+        path: /tmp/rollback
+        state: directory
+        mode: '0755'
+
+    - name: Generate the ecosystem configuration from PM2
+      command: pm2 ecosystem
+      args:
+        chdir: /tmp/rollback
+      register: ecosystem_generation
+
+    - name: Rename the generated file for rollback
+      shell: mv /tmp/rollback/ecosystem.config.js /tmp/rollback/ecosystem.config.json
+      args:
+        creates: /tmp/rollback/ecosystem.config.json
+      when: ecosystem_generation.changed
+
+    - name: Verify the ecosystem configuration file exists
+      stat:
+        path: /tmp/rollback/ecosystem.config.json
+      register: ecosystem_file
+
+    - name: Fail if the ecosystem file was not created
+      fail:
+        msg: "Failed to create ecosystem.config.json in /tmp/rollback"
+      when: not ecosystem_file.stat.exists
+    - name: Rename the ecosystem file with a timestamp
+      shell: mv /tmp/rollback/ecosystem.config.js /tmp/rollback/ecosystem_{{ ansible_date_time.iso8601 }}.json
