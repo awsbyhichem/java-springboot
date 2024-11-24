@@ -111,3 +111,5 @@ Spring Boot 3 :
 
 Springfox est largement abandonné, car il n'est pas compatible avec Spring Boot 3.
 L'approche recommandée est désormais d'utiliser Springdoc-OpenAPI, qui prend en charge les normes OpenAPI 3.x et s'intègre parfaitement avec Spring Boot 3.
+
+Avec Spring Boot 3, il est fortement recommandé de migrer de Springfox à Springdoc-OpenAPI si ce n'était pas encore fait. Springfox n'est pas maintenu activement et ne prend pas en charge Jakarta EE ni Spring Boot 3.
