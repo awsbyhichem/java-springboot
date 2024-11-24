@@ -1,0 +1,23 @@
+---
+- name: Rollback PM2 services using the saved ecosystem
+  hosts: all
+  become: yes
+  tasks:
+    - name: Check if the rollback file exists
+      stat:
+        path: /tmp/rollback/ecosystem.config.json
+      register: ecosystem_file
+
+    - name: Fail if rollback file is not found
+      fail:
+        msg: "Rollback file /tmp/rollback/ecosystem.config.json not found"
+      when: not ecosystem_file.stat.exists
+
+    - name: Delete all PM2 processes
+      command: pm2 delete all
+
+    - name: Start PM2 processes from the saved ecosystem
+      command: pm2 start /tmp/rollback/ecosystem.config.json
+
+    - name: Save the restored PM2 state
+      command: pm2 save
