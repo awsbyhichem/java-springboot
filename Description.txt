@@ -113,3 +113,8 @@ Springfox est largement abandonné, car il n'est pas compatible avec Spring Boot
 L'approche recommandée est désormais d'utiliser Springdoc-OpenAPI, qui prend en charge les normes OpenAPI 3.x et s'intègre parfaitement avec Spring Boot 3.
 
 Avec Spring Boot 3, il est fortement recommandé de migrer de Springfox à Springdoc-OpenAPI si ce n'était pas encore fait. Springfox n'est pas maintenu activement et ne prend pas en charge Jakarta EE ni Spring Boot 3.
+
+Springdoc-OpenAPI (qui remplace Springfox pour Spring Boot 3) génère un fichier swagger.json compatible avec la spécification OpenAPI.
+Tant que votre API Gateway (comme Kong, AWS API Gateway, Apigee, ou autres) prend en charge OpenAPI 3.x, il ne devrait pas y avoir de problème de compatibilité.
+OpenAPI 3.1 introduit quelques nouveautés par rapport à OpenAPI 3.0, mais elles sont rétro-compatibles dans la plupart des cas.
+Si votre API Gateway est très spécifique quant à la version OpenAPI supportée (par exemple, seulement OpenAPI 3.0 et non 3.1), assurez-vous que Springdoc-OpenAPI génère un fichier compatible. Cela peut être configuré.
