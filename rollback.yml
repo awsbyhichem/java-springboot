@@ -1,23 +1,73 @@
 ---
-- name: Rollback PM2 services using the saved ecosystem
+- name: Rollback symbolic links, set Java version to 11, and handle PM2 rollback
   hosts: all
   become: yes
+  vars:
+    apps_root: "/path/to/apps"               # Chemin vers le dossier apps
+    desired_java_version: "/usr/lib/jvm/java-11-openjdk"  # Chemin vers Java 11
+    pm2_dump_backup: "/data/rollback/pm2/dump.pm2"  # Emplacement du fichier dump sauvegardé
   tasks:
-    - name: Check if the rollback file exists
-      stat:
-        path: /tmp/rollback/ecosystem.config.json
-      register: ecosystem_file
+    - name: Change Java version to 11 using alternatives
+      command: >
+        alternatives --set java {{ desired_java_version }}/bin/java
+      when:
+        - desired_java_version is defined
 
-    - name: Fail if rollback file is not found
-      fail:
-        msg: "Rollback file /tmp/rollback/ecosystem.config.json not found"
-      when: not ecosystem_file.stat.exists
+    - name: Verify Java version
+      command: java -version
+      register: java_version_output
+      ignore_errors: yes
 
-    - name: Delete all PM2 processes
-      command: pm2 delete all
+    - debug:
+        msg: "Current Java version output: {{ java_version_output.stdout }}"
 
-    - name: Start PM2 processes from the saved ecosystem
-      command: pm2 start /tmp/rollback/ecosystem.config.json
+    - name: Copy PM2 dump file to ~/.pm2
+      copy:
+        src: "{{ pm2_dump_backup }}"
+        dest: "~/.pm2/dump.pm2"
+        remote_src: yes
+      notify:
+        - Resurrect PM2 processes
 
-    - name: Save the restored PM2 state
-      command: pm2 save
+    - name: Find app-ms* folders
+      find:
+        paths: "{{ apps_root }}"
+        file_type: directory
+      register: app_folders
+
+    - name: Iterate over app-ms* folders
+      with_items: "{{ app_folders.files }}"
+      vars:
+        app_path: "{{ item.path }}"
+      tasks:
+        - name: Find all ro_dms.json files with rollback backups
+          find:
+            paths: "{{ app_path }}"
+            patterns: "ro_dms.json.back.*"
+            file_type: file
+          register: ro_backup_files
+
+        - name: Find all rw_dms.json files with rollback backups
+          find:
+            paths: "{{ app_path }}"
+            patterns: "rw_dms.json.back.*"
+            file_type: file
+          register: rw_backup_files
+
+        - name: Rollback symbolic link for ro_dms.json
+          file:
+            src: "{{ ro_backup_files.files | map(attribute='path') | sort | last }}"
+            dest: "{{ app_path }}/ds-mpb.json"
+            state: link
+          when: ro_backup_files.files | length > 0
+
+        - name: Rollback symbolic link for rw_dms.json
+          file:
+            src: "{{ rw_backup_files.files | map(attribute='path') | sort | last }}"
+            dest: "{{ app_path }}/ds-slave.json"
+            state: link
+          when: rw_backup_files.files | length > 0
+
+  handlers:
+    - name: Resurrect PM2 processes
+      command: pm2 resurrect
