@@ -1,0 +1,13 @@
+Bonjour ...,
+
+Je me permets de vous adresser ma candidature pour le poste d'Ingénieur DevSecOps au sein de votre entreprise.
+
+Fort de neuf ans d'expérience professionnelle, dont six années spécifiquement consacrées au domaine du DevOps – tant au sein de l'AT... que dans le cadre de prestations – je suis convaincu que mes compétences et mon expertise correspondent parfaitement aux besoins de l'équipe ... .
+
+Au cours de mon parcours, j'ai acquis une solide expérience dans le déploiement et la gestion d'infrastructures on-premises et cloud, notamment sur AWS. Ma maîtrise des technologies telles que Terraform, Docker, Kubernetes, Jenkins et Ansible m'a permis d'optimiser les processus de développement et de déploiement, contribuant ainsi à l'efficacité opérationnelle des organisations pour lesquelles j'ai travaillé.
+
+Je suis particulièrement enthousiaste à l'idée de rejoindre le Groupe ... et de mettre à profit ma capacité à concevoir des solutions Cloud/DevOps innovantes, ainsi que mon engagement envers l'amélioration continue, pour contribuer activement au succès de vos projets.
+
+Je reste à votre disposition pour un entretien afin de discuter plus en détail de ma candidature. Dans l'attente de votre retour, je vous prie d'agréer, Madame, l'expression de mes salutations distinguées.
+
+Cordialement,
