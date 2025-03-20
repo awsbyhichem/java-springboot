@@ -1,0 +1,46 @@
+#########Créer l’utilisateur SFTP
+
+sudo useradd user_key -g grp-sftp -d /var/grp-sftp/user_key -s /usr/sbin/nologin
+
+
+##########Configurer la structure des répertoires pour le chroot et la gestion des clés
+
+sudo mkdir -p /var/grp-sftp/user_key/.ssh
+sudo mkdir -p /var/grp-sftp/user_key/upload
+
+##########Définir les permissions du répertoire principal pour respecter le chroot
+
+sudo chown root:root /var/grp-sftp/user_key
+sudo chmod 755 /var/grp-sftp/user_key
+
+##########Configurer le dossier .ssh et le fichier authorized_keys
+
+sudo chown user_key:grp-sftp /var/grp-sftp/user_key/.ssh
+sudo chmod 700 /var/grp-sftp/user_key/.ssh
+
+
+sudo touch /var/grp-sftp/user_key/.ssh/authorized_keys
+sudo chown user_key:grp-sftp /var/grp-sftp/user_key/.ssh/authorized_keys
+sudo chmod 600 /var/grp-sftp/user_key/.ssh/authorized_keys
+
+##########Génération et Ajout des Clés Publique/Privée
+
+ssh-keygen -t rsa -b 4096 -f ~/.ssh/user_key_id
+
+
+##########Ajouter le clé publique à authorized_keys
+
+sudo nano /var/grp-sftp/user_key/.ssh/authorized_keys
+
+
+##########
+
+sudo systemctl restart sshd
+
+
+##############################
+##############################
+
+
+mysftpuser@35.180.12.162
+Port=2222
