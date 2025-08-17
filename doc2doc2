@@ -1,0 +1,114 @@
+Event Replicator Target Adapter
+
+Vue d’ensemble
+Le Event Replicator Target Adapter permet de transformer et d’appliquer les données répliquées d’une base Adabas (mainframe) vers des cibles variées : bases relationnelles (DB2, Microsoft SQL Server, MySQL, Oracle, PostgreSQL, Teradata), files/topics JMS, ou cache Software AG Terracotta. Pour des informations sur Terracotta et l’écosystème Big Data de Software AG, référez-vous au chapitre « IBO and Big Data » disponible sur le portail Empower de Software AG.
+
+Fonctionnement principal
+
+Prérequis : définir et activer les subscriptions Event Replicator et les destination definitions appropriées.
+
+Démarrage : lancer le Target Adapter.
+
+Traitement normal : lorsque les subscriptions lisent les événements répliqués d’Adabas, le Target Adapter transforme ces événements et applique les modifications sur la cible configurée (table(s) relationnelle(s) ou cache Terracotta), en temps réel au fur et à mesure du traitement de la subscription.
+
+Opérations manuelles via l’Event Replicator Subsystem
+
+En plus du traitement normal, l’Event Replicator Subsystem permet de soumettre des requêtes manuelles au Target Adapter pour des opérations de maintenance ou de synchronisation :
+
+Initial-state request : lancer une opération d’initialisation pour remplir (populate) les tables cibles ou le cache à l’état initial.
+
+Clear/Refresh : vider ou rafraîchir les données dans les tables cibles ou le cache.
+
+Delete (drop) des tables relationnelles : suppression des tables cibles si nécessaire.
+
+Pour la procédure exacte d’envoi de ces requêtes, consultez la section « Submitting Event Replicator Target Adapter Requests » de la documentation.
+
+Intégration avec ADALOD
+
+Il est possible de configurer l’utilitaire ADALOD pour que les données chargées ou mises à jour par cet utilitaire soient également répliquées vers les tables relationnelles. Attention : cette intégration peut introduire des problèmes (ordre des transactions, doublons, contraintes d’intégrité, verrouillage, performances). Lisez attentivement la section Replicating ADALOD Data to the RDBMS Tables pour les prérequis et les risques avant de mettre en production ce flux.
+
+Publication vers JMS (webMethods Broker)
+
+Le Target Adapter peut publier les événements répliqués vers des files JMS ou des topics JMS exposés par des providers JNDI gérés par webMethods Broker. Les messages publiés peuvent ensuite être consommés par des applications clientes du Broker (par exemple : webMethods Integration Server).
+
+Pour la configuration JMS dans le Target Adapter, reportez-vous à la section Replicating Data to JMS Queues or Topics. Pour des informations complètes sur la prise en charge JMS côté webMethods Broker, consultez la documentation EntireX Message Service Provider (MSP) disponible sur Empower.
+
+
+
+
+Composants — Event Replicator Target Adapter
+
+Le Event Replicator Target Adapter s’appuie, en plus de son propre moteur de transformation/appliqueur, sur plusieurs composants auxiliaires fournis avec la suite. Voici un résumé clair de ces composants et de leur rôle.
+
+Administration tool
+
+L’Administration tool sert à configurer l’installation du Target Adapter (paramètres de destination, subscriptions, mappings globaux, journaux, etc.). C’est l’outil principal pour l’administration opérationnelle du composant.
+Voir la rubrique Event Replicator Target Adapter Administration pour les instructions détaillées.
+
+Data Mapping Tool
+
+Le Data Mapping Tool permet de générer les structures nécessaires à la traduction des enregistrements Adabas vers la cible :
+
+GFB (Global Format Buffer) — buffer de format global qui décrit la structure des enregistrements traduits,
+
+GFFT (Global Field Table) — table des champs correspondants, utilisée pour le mapping des colonnes/champs.
+Ces artefacts (GFB/GFFT) sont requis pour que l’Event Replicator et le Target Adapter sachent comment déserialiser/mapper les enregistrements répliqués vers les tables relationnelles ou autres cibles. Voir Using the Data Mapping Tool pour le mode d’emploi.
+
+Replication Monitoring
+
+Replication Monitoring est l’outil de supervision qui montre l’état et l’avancement des flux de réplication gérés par Event Replicator for Adabas. Il permet de : suivre les offsets/positions, contrôler la progression des subscriptions, inspecter erreurs et retards. Référez-vous à Replication Monitoring pour la documentation et les bonnes pratiques de surveillance.
+
+Software AG ERTA Administration Service (composant interne)
+
+Le Software AG ERTA Administration Service est un service interne qui permet :
+
+d’exécuter le Target Adapter comme un service système (démarrage/arrêt automatique, intégration OS),
+
+d’autoriser la communication avec une console d’administration distante.
+Ce second point est utile sur des plateformes où l’outil d’administration graphique ne peut pas être installé localement (ex. certains environnements HP ou zLinux) : la console distante peut alors piloter/configurer le Target Adapter via ce service.
+
+
+Fonctionnement
+Exigences préalables
+
+Le Event Replicator Target Adapter requiert les éléments suivants :
+
+Subscription Event Replicator for Adabas associée à un GFB (Global Format Buffer) et une GFFT (Global Field Table) générés pour cette subscription.
+
+Important : si aucune GFFT n’a été générée pour la subscription, le Target Adapter ne fonctionnera pas.
+
+Pour les procédures de génération, voir : Generating a GFB using the Adabas Event Replicator Subsystem ou Generating a GFB and Field Table Using the Data Mapping Tool.
+
+Au moins une destination (destination definition) pour Event Replicator for Adabas dont le destination class type est SAGTARG.
+
+La subscription doit référencer cette destination SAGTARG.
+
+Pour gérer les définitions de destination, consulter Maintaining Destination Definitions using the Adabas Event Replicator Subsystem.
+
+Remarque importante sur les types de destination :
+
+On ne peut pas définir DCLASS=SAGTARG pour des destinations de type ADABAS ou FILE (DTYPE=ADABAS ou DTYPE=FILE).
+
+Le DCLASS=SAGTARG est valide uniquement pour des destinations telles que webMethods EntireX, WebSphere MQ ou NULL.
+
+Lorsqu’on utilise DCLASS=SAGTARG, le paramètre ADARUN RPLPARMS doit être configuré sur FILE ou BOTH afin de permettre l’accès aux définitions de field table (GFFT).
+
+Les subscription et destination definitions mentionnées ci-dessus doivent être activées. Pour activer via Adabas Online System (AOS), voir : Managing Replication Definitions from AOS.
+
+Privilèges utilisateurs : l’utilisateur qui effectue la maintenance des objets cibles (création/alteration des tables RDBMS) doit disposer des droits appropriés au niveau de la base de données cible.
+
+Le Target Adapter n’accorde pas de privilèges RDBMS — l’autorisation dépend des droits définis dans le SGBD. Vérifier et préparer ces privilèges en amont.
+
+Traitement général (flux de données)
+
+Une fois qu’une subscription et une ou plusieurs destinations associées (conformes aux exigences ci-dessus) sont définies et activées :
+
+Création automatique du schéma : l’Event Replicator for Adabas génère automatiquement un schéma de mapping basé sur la field table (GFFT) fournie pour la subscription.
+
+Transmission au Target Adapter : la subscription transforme les enregistrements répliqués et envoie le schéma + données transformées au Event Replicator Target Adapter.
+
+Transformation & application : le Target Adapter utilise ce schéma pour transformer les enregistrements Adabas et appliquer les modifications sur la cible relationnelle. Selon la situation, il exécutera des opérations INSERT, UPDATE et DELETE.
+
+Si les tables cibles n’existent pas, le Target Adapter peut les créer dynamiquement et les remplir.
+
+Le traitement intervient en quasi-temps réel au fur et à mesure que la subscription consomme les événements répliqués.
