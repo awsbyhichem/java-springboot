@@ -1,0 +1,182 @@
+1. Présentation synthétique
+
+ApplinX est une solution serveur qui facilite l’accès et l’intégration des données et transactions des systèmes cœur (mainframes, applications terminal, systèmes transactionnels) vers des applications web ou plateformes modernes, sans modifier ces systèmes cœur. ApplinX encapsule les ressources legacy et les publie sous forme de composants programmatiques compatibles avec l’environnement cible (services web, .NET, J2EE, XML), utilisables comme briques réutilisables pour de nouvelles applications ou pour enrichir des applications existantes (ex. CRM).
+
+2. Valeur apportée
+
+Modernisation non intrusive : conserver la logique métier existante tout en la rendant accessible via API/services.
+
+Réutilisabilité : isoler la navigation/transaction legacy en composants (Path/Flow Procedures) réutilisables par d’autres applications.
+
+Accélération des projets d’intégration et réduction des risques liés à la réécriture.
+
+3. Fonctionnalités principales
+
+SOA Enablement : exposition des fonctionnalités legacy comme services web (au niveau des écrans host, des transactions ou des accès base de données). Permet l’intégration dans une architecture orientée services.
+
+Web Enablement : plusieurs modes pour rendre les écrans host accessibles via le web (voir section 4).
+
+HTML Emulation : émulation thin‑client dans le navigateur conservant l’apparence et le comportement du terminal.
+
+Instant Web Application : transformation rapide et configurable d’écrans host en interfaces web ergonomiques (templates, CSS, conversion des champs en composants GUI).
+
+Composite Web Application : intégration personnalisée via développement Java/.NET, agrégation de données issues de plusieurs systèmes.
+
+Tests d’écran automatisés : support pour automatiser la validation des écrans et transformations.
+
+4. Modes de Web Enablement
+
+HTML Emulation (Pure HTML Emulation) : thin client prêt à l’emploi pour .NET et J2EE — idéal pour remplacer un client terminal local par un accès navigateur sans modification de l’écran host.
+
+Instant Web Application : règles et templates applicables globalement (Screen Groups). Transformations typiques : header/message lines, conversion des champs en combos/radios/checkbox, ajout d’un datepicker, conversion de touches fonction en boutons ou liens.
+
+Composite Web Application : pour des besoins avancés, développeurs Java/.NET utilisent les ApplinX Base Objects (API) pour construire des pages web qui agrègent plusieurs sources (écrans host, BDD, services externes).
+
+5. SOA Enablement — comment ça marche (terminologie ApplinX)
+
+Path Procedures : encapsulent des parcours d’écrans host (mainframe/terminal) pour représenter des processus métiers (ex. consultation, saisie). Elles sont exposables comme composants réutilisables.
+
+Flow Procedures : orchestration et enrichissement — peuvent appeler Path Procedures, exécuter Program Procedures, invoquer des services web externes et effectuer des opérations BDD (SELECT, EXECUTE, COMMIT, ROLLBACK).
+
+Procedure Clients : consommateurs ou clients qui appellent les procédures exposées.
+
+Ces éléments permettent de créer des services web composites qui agrègent simultanément des données issues d’écrans host, de transactions RPC, de requêtes BDD et de services externes.
+
+6. Architecture et composants (résumé opérationnel)
+
+Serveur ApplinX : coeur applicatif qui gère sessions, transformations et exposition.
+
+Connecteurs host : interfaces pour communiquer avec les systèmes legacy (protocoles terminal comme 3270/5250/VT, RPC, drivers spécifiques).
+
+Front web / reverse proxy : frontal HTTPS, load balancer, WAF si nécessaire.
+
+Magasin de configuration : templates, règles de transformation, mappings.
+
+API / couche services : endpoints SOAP/REST/XML exposés aux consommateurs.
+
+Considérations : sessions stateful (affinité ou store partagé), latence vers les hosts, scaling et clustering.
+
+7. Déploiement, montée en charge et HA (pratiques clés)
+
+Déploiement en cluster derrière un load balancer, session store partagé ou session affinity si nécessaire.
+
+Externaliser la configuration et prévoir sauvegarde/versioning des templates et mappings.
+
+Health checks end‑to‑end (connexion host + transaction simple).
+
+Plan de basculement pour connecteurs vers hosts critiques.
+
+8. Sécurité
+
+TLS pour toutes les communications sensibles.
+
+Intégration avec LDAP/AD/SSO pour l’authentification.
+
+Contrôle d’accès au niveau des services exposés et journalisation des actions sensibles.
+
+Segmentation réseau et règles pare‑feu entre ApplinX et les hosts.
+
+
+
+### SOA ###
+
+
+SOA Enablement
+
+Résumé technique (non-littéral)
+SOA Enablement est la fonctionnalité d’ApplinX qui permet de réutiliser la logique métier et les capacités transactionnelles des systèmes cœur en les exposant comme des services consommables par d’autres applications. Concrètement, ApplinX transforme des séquences d’écrans host (mainframe/terminal), des transactions host, ou des accès base de données, en services web ou en procédures réutilisables, afin que les systèmes legacy deviennent des participants à part entière dans une architecture orientée services.
+
+Comment ça fonctionne (détails d’implémentation)
+
+Regroupement d’écrans en procédures réutilisables : on encapsule des suites d’écrans host (mainframe/terminal) en Path Procedures. Ces procédures représentent des parcours métiers (ex. consultation de compte, saisie d’ordre) et sont exposables vers l’extérieur via des services web ou des clients de procédure (Procedure Clients).
+
+Orchestration et enrichment de données : les Flow Procedures servent d’orchestrateurs. Elles peuvent :
+
+appeler des Path Procedures (donc piloter des écrans host),
+
+exécuter des Program Procedures (logique spécifique côté ApplinX),
+
+invoquer des services web externes,
+
+interagir directement avec des bases de données (SELECT, EXECUTE, ROLLBACK, COMMIT) pour enrichir les données issues du host.
+
+Sources multiples : outre les écrans host, on peut récupérer des informations depuis :
+
+transactions host (ex. RPC vers le système legacy),
+
+requêtes SQL sur bases de données,
+
+services web externes (REST/SOAP).
+Les Flow Procedures permettent d’agréger et corréler ces sources.
+
+Composition en un seul service : en combinant Path et Flow Procedures, on peut construire un service web unique qui, en une seule opération, interroge plusieurs sources (mainframe, BDD, services externes) et retourne une réponse agrégée au consommateur.
+
+Exposition & consommation : les procédures/flows sont exposées via les mécanismes standards (SOAP/REST/XML) et peuvent être consommées par n’importe quel composant qui supporte ces protocoles.
+
+Points pratiques à garder en tête
+
+Les Path/Flow Procedures sont des abstractions métier : elles permettent d’isoler la logique de navigation dans les écrans host et d’en faire des blocs réutilisables.
+
+Les Flow Procedures prennent en charge la transactionnalité (commit/rollback) lorsque des opérations BDD sont impliquées — utile pour maintenir la cohérence des données lors d’orchestrations multi-sources.
+
+On peut chaîner et réutiliser les procédures : cela facilite la construction de services composites sans dupliquer la logique d’accès au host.
+
+
+
+### Web ENablement:
+
+
+Web Enablement — Pure HTML Emulation
+
+L’HTML emulation d’ApplinX est une émulation HTML thin-client prête à l’emploi, disponible pour les environnements .NET et J2EE. Elle transforme instantanément une émulation de terminal existante en une émulation de terminal dans le navigateur, en conservant le comportement attendu : prises en charge des touches host (touches PF/fonctions), support de l’impression et maintien des jeux de couleurs d’origine.
+Côté utilisateur, cela signifie qu’aucune formation particulière n’est nécessaire : le thin-client web remplace simplement le client terminal installé localement.
+
+Web Enablement — Instant Web Application
+
+L’Instant Web Application permet de moderniser rapidement des applications cœur en interfaces web contemporaines avec peu ou aucun développement. Par des configurations simples (templates, feuilles de style), on peut améliorer le « look & feel » : ajouter un bandeau supérieur et latéral, insérer un logo entreprise, modifier polices et couleurs, etc. Ces ajustements accélèrent l’accès à l’information et améliorent la lisibilité pour les utilisateurs.
+
+Fonctions courantes de transformation :
+
+appliquer un template global (en-têtes, logos),
+
+convertir des champs host en composants GUI (menus déroulants, boutons radio, cases à cocher),
+
+ajouter un sélecteur de date pour les champs date,
+
+transformer les touches PF en boutons/cliquables.
+
+Les configurations peuvent être appliquées de façon globale (Screen Groups) pour homogénéiser l’interface sur plusieurs écrans.
+
+Composite Web Application
+
+La Composite Web Application s’adresse aux besoins avancés : personnalisation complète et extension via le développement en Java ou .NET. Elle permet d’agréger sur une même page web des informations provenant de plusieurs systèmes cœur (écrans host, transactions, bases de données, services externes) en s’appuyant sur les ApplinX Base Objects (API) et sur votre framework web.
+
+Caractéristiques :
+
+pages web générées totalement personnalisables,
+
+capacité d’intégrer des actifs legacy à différents niveaux (écran, transaction, données),
+
+possibilité d’exploiter la logique ApplinX depuis votre code métier pour construire des interfaces riches et composites.
+
+Comportement au runtime — résolution des pages (fallback)
+
+Lorsqu’une requête ApplinX arrive (ex. appui sur une touche PF, exécution d’un chemin de navigation, requête via l’Application Map), le frontend web tente de charger, dans l’ordre :
+
+la page web dont le nom de fichier correspond exactement à l’écran host courant de la session ApplinX ;
+
+si inexistante, une page correspondant au Screen Group auquel appartient cet écran host ;
+
+si aucune page correspondante n’est trouvée, une page instantanée est générée automatiquement pour représenter l’écran host courant, permettant à l’utilisateur de continuer à travailler immédiatement.
+
+Ce mécanisme garantit continuité de service : même sans développement spécifique, l’utilisateur dispose toujours d’une représentation exploitable de l’écran host.
+
+Remarques pratiques pour le déploiement & l’usage
+
+L’émulation HTML est la solution la plus rapide pour remplacer des clients terminal legacy par un accès navigateur sans changer les écrans host.
+
+L’Instant Web App est idéale pour des modernisations UX rapides et configurables.
+
+La Composite App est recommandée quand on doit agréger plusieurs sources, appliquer une logique métier importante ou intégrer l’interface dans un portail web existant.
+
+Penser à documenter les Screen Groups et les mappings de page pour faciliter la maintenance et les évolutions.
