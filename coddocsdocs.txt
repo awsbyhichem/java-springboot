@@ -1,0 +1,62 @@
+elles ont des rôles différents (une étape de conception/packaging vs un composant d’exécution/hôte).
+
+
+
+EntireX Web Services Wrapper = un outil/wizard de génération (design-time) qui crée les artefacts d’un web service (WSDL / .aar, fichiers de mapping .xmm) à partir d’un serveur RPC (par ex. programmes COBOL ou Natural) et qui peut éventuellement déployer ces artefacts. 
+
+
+Listener for XML/SOAP = le composant d’exécution (runtime) qui tourne dans un serveur servlet (p. ex. Tomcat/Axis2 / Web Services Stack) et qui reçoit les requêtes XML/SOAP HTTP(S), charge les archives .aar et les expose aux clients SOAP ; il fait la réception/dispatch des messages SOAP vers EntireX.
+
+
+Web Services Wrapper
+
+C’est une wizard dans EntireX Designer qui génère :
+
+l’archive du web service (.aar),
+
+le mapping XML/SOAP (fichier .xmm) et la WSDL associée.
+
+Il « wrappe » un serveur RPC (COBOL, Natural, etc.) pour en faire un service SOAP/HTTP consommable par des clients externes.
+
+Peut inclure options d’authentification (Basic, UsernameToken, EntireX Security, etc.) et permet d’adapter le mapping IDL → XML. 
+IBM
++1
+
+Listener for XML/SOAP
+
+C’est un listener/servlet déployé dans un conteneur web (servlet-enabled web server) qui :
+
+charge les .aar générés,
+
+expose les endpoints SOAP over HTTP(S) aux clients,
+
+traduît/reroute les messages SOAP vers le back-end EntireX (broker / RPC servers) et renvoie les réponses SOAP aux clients.
+
+C’est donc l’élément qui écoute et sert réellement les appels SOAP au runtime.
+
+==> Le Listener repose sur la Software AG Web Services Stack (Axis2/servlet)
+
+
++++++++++++++
+
+oncrètement, les bibliothèques/runtime (dont entirex.jar) + l’application wsstack (wsstack.war) forment l’environnement d’exécution qui contient le composant XML/SOAP Runtime / Wrapper.
+
+
+1. les artefacts .aar (générés par le Web Services Wrapper / Designer) sont correctement déployés dans l’application WS-Stack (typiquement wsstack/WEB-INF/services). 
+IBM
+
+2. entirex.jar (les libs EntireX runtime) est présent dans wsstack/WEB-INF/lib pour que le Listener et le runtime XML/SOAP puissent fonctionner. 
+IBM
+
+3. l’EntireX Broker et le/les RPC servers (les serveurs NATURAL qui exécutent les subprogrammes) sont accessibles et démarrés (broker node/service configurés dans les artefacts .aar ou via fichier de config externe).
+
+
+##############################
+
+
+
+RPC Server for XML/SOAP : un serveur/bridge côté RPC qui permet à des clients RPC d’appeler des services XML/SOAP en transformant les appels RPC sortants en requêtes XML/SOAP HTTP(S).
+
+
+RPC Server for XML/SOAP : RPC → XML/SOAP (facilite aux clients RPC de consommer des services web).
+
