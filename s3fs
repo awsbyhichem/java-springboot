@@ -1,0 +1,141 @@
+0) Variables (remplace avant exécution)
+# Remplace ces valeurs
+ENDPOINT="https://storagegrid.example:10443"   # ton endpoint NetApp S3 (avec https:// et port si nécessaire)
+BUCKET="myapp-storage"                         # nom du bucket que tu veux créer
+LOCAL_DIR="/var/www/html/myapp/storage"        # point actuel contenant les fichiers
+BACKUP_DIR="/root/backups"
+PASSWD_FILE="/etc/passwd-s3fs"
+CACHE_DIR="/var/cache/s3fs"
+ACCESS_KEY="TON_ACCESS_KEY"
+SECRET_KEY="TON_SECRET_KEY"
+
+
+1) Backup local (TRÈS IMPORTANT)
+sudo mkdir -p /root/backups
+sudo tar -czf /root/backups/myapp_storage_backup_$(date +%F).tar.gz -C /var/www/html/myapp storage
+# Vérifier l'archive
+ls -lh /root/backups/myapp_storage_backup_*.tar.gz
+
+
+2) Installer outils nécessaires (EPEL, s3fs, rclone, curl)
+
+# Installer s3fs (package via EPEL)
+sudo yum install -y s3fs-fuse fuse
+
+# Installer rclone (script officiel, pratique pour StorageGRID)
+curl https://rclone.org/install.sh | sudo bash
+
+# Installer unzip & jq (utilitaires)
+sudo yum install -y unzip jq
+
+
+3) Copier / synchroniser les fichiers existants vers le bucket (migration)
+
+Important : fais-le avant de monter le bucket pour éviter toute confusion/masquage.
+
+Avec rclone (recommandé)
+# Exécute depuis le serveur qui a /var/www/html/myapp/storage
+sudo rclone copy /var/www/html/myapp/storage storagegrid:$BUCKET --transfers=16 --checkers=16 --progress --stats=10s
+# ou pour synchroniser (ajoute --delete si tu veux que remote reflète exactement local)
+# sudo rclone sync /var/www/html/myapp/storage storagegrid:$BUCKET --transfers=16 --checkers=16 --progress
+
+# Vérifier quelques objets:
+rclone ls storagegrid:$BUCKET | head
+
+
+4) Vérification post-copie et sauvegarde locale supplémentaire
+# VÉRIF : lister sur le remote
+rclone lsd storagegrid:$BUCKET
+rclone ls storagegrid:$BUCKET | wc -l
+
+# Si tout OK : renommer le dossier local (on garde une copie locale intacte)
+sudo mv $LOCAL_DIR ${LOCAL_DIR}.local
+# recréer point de montage vide
+sudo mkdir -p $LOCAL_DIR
+sudo chown root:root $LOCAL_DIR
+sudo chmod 0755 $LOCAL_DIR
+
+
+Tu gardes ainsi storage.local avec la copie originale au moins jusqu’à validation finale.
+
+
+5) Configurer les credentials pour s3fs
+
+Crée /etc/passwd-s3fs contenant ACCESSKEY:SECRETKEY (format simple).
+Permissions strictes :
+
+echo "${ACCESS_KEY}:${SECRET_KEY}" | sudo tee $PASSWD_FILE > /dev/null
+sudo chmod 600 $PASSWD_FILE
+sudo chown root:root $PASSWD_FILE
+
+
+(s3fs lira ce fichier.)
+
+
+
+6) Créer cache dir et récupérer UID/GID Apache
+sudo mkdir -p $CACHE_DIR
+sudo chown root:root $CACHE_DIR
+sudo chmod 700 $CACHE_DIR
+
+# Récupérer UID/GID utilisateur Apache sur RHEL (généralement 'apache')
+AP_UID=$(id -u apache 2>/dev/null || id -u www-data 2>/dev/null || echo 48)
+AP_GID=$(id -g apache 2>/dev/null || id -g www-data 2>/dev/null || echo 48)
+echo "Using UID=$AP_UID GID=$AP_GID for apache"
+
+7) Montage manuel de test (commande à exécuter sur un serveur d’abord)
+sudo s3fs $BUCKET $LOCAL_DIR \
+  -o passwd_file=$PASSWD_FILE \
+  -o url=$ENDPOINT \
+  -o use_path_request_style \
+  -o allow_other \
+  -o uid=$AP_UID \
+  -o gid=$AP_GID \
+  -o umask=0022 \
+  -o use_cache=$CACHE_DIR \
+  -o stat_cache_expire=120 \
+  -o multireq_max=5
+
+
+use_path_request_style est souvent nécessaire pour S3 compatibles non-AWS.
+
+use_cache = cache local pour améliorer les lectures répétées.
+
+stat_cache_expire réduit les stat réseau fréquents.
+(Exemples et options usuelles documentées dans guides s3fs et fournisseurs).
+
+Tester :
+ls -la $LOCAL_DIR | head
+# Lire un fichier via shell
+sudo -u apache head -c 100 $LOCAL_DIR/<un-fichier.jpg>
+# Ou via curl si tu as un script php local qui sert ces fichiers : accéder via navigateur interne / logs
+
+
+
+8) Automatiser le montage au boot (/etc/fstab)
+
+Rends le montage persistant en ajoutant une ligne (utilise les UID/GID numériques calculés plus haut) :
+
+Récupère UID/GID numériques AP_UID / AP_GID comme montré précédemment.
+
+Ajoute dans /etc/fstab (utilise s3fs#bucket syntax) :
+
+# Exécute avec sudo EDITOR
+sudo bash -c 'cat >> /etc/fstab <<EOF
+s3fs#'"$BUCKET"' '"$LOCAL_DIR"' fuse _netdev,passwd_file='"$PASSWD_FILE"',url='"$ENDPOINT"',use_path_request_style,allow_other,uid='"$AP_UID"',gid='"$AP_GID"',umask=0022,use_cache='"$CACHE_DIR"',stat_cache_expire=120,multireq_max=5 0 0
+EOF'
+
+
+Tester remount (sans reboot) :
+
+sudo umount $LOCAL_DIR || true
+sudo mount -a
+mount | grep $LOCAL_DIR
+
+
+Note : certains environnements ont souci à monter via fstab très tôt ; systemd avec _netdev aide. Si tu rencontres problème au boot, considère un systemd mount unit/script de démarrage.
+
+
+
+
+
